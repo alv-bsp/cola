@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cola</title>
+  <meta name="description" content="Il diario di Cola: calore, peso, vaccini, trattamenti e cose da fare">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#eef4f1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Cola">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/zampa.svg" type="image/svg+xml">
+  <link rel="icon" href="/icons/zampa-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/icons/zampa-180.png">
+</head>
+<body>
+  <div id="app"></div>
+  <dialog id="foglio" class="foglio" aria-labelledby="foglio-titolo"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <!-- Senza "capture": su iPhone propone fotocamera, libreria foto e file -->
+  <input type="file" id="scegli-foto" accept="image/*" hidden>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

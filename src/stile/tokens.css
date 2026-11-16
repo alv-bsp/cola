@@ -1,0 +1,57 @@
+/* Cola · design token
+   Chiaro e arioso: cielo e prato sfocati sul fondo, carte in vetro bianco, verde erba per i titoli,
+   lime per i dati, verde bosco per le azioni. Contrasti: testo su vetro ≥ 12:1, secondario ≥ 5:1,
+   bianco sul bosco ≥ 9:1, testo delle pillole sul loro fondo ≥ 4.5:1. */
+:root {
+  /* fondo */
+  --cielo: #dbe9f0;
+  --nebbia: #ebf2ee;
+  --prato: #e0edcb;
+  --monti: #c5d6dc;
+  --colline: #d3e5bb;
+
+  /* vetro */
+  --vetro: rgba(255, 255, 255, .7);
+  --vetro-forte: rgba(255, 255, 255, .86);
+  --vetro-bordo: rgba(255, 255, 255, .92);
+  --sfoca: blur(22px) saturate(160%);
+  --pieno: #ffffff;
+
+  /* testo */
+  --ink: #1a1d18;
+  --ink-2: #5a6455;
+  --ink-3: #7f8a79;
+  --linea: rgba(26, 29, 24, .08);
+  --bordo: rgba(26, 29, 24, .12);
+
+  /* verdi */
+  --erba: #5a8a22;          /* la seconda riga dei titoli */
+  --lime: #a8d64a;          /* barre, tacche, accenti */
+  --lime-scuro: #77ab24;
+  --lime-chiaro: #e3f2b4;
+  --bosco: #2e4a2b;         /* pulsante principale, carta del ciclo */
+  --bosco-2: #46633f;
+  --su-bosco: #ffffff;
+
+  /* forma */
+  --r-sm: 12px; --r-md: 18px; --r-lg: 24px; --r-xl: 30px; --r-pill: 999px;
+  --ombra: 0 1px 2px rgba(34, 52, 24, .04), 0 12px 32px rgba(34, 52, 24, .08);
+  --ombra-forte: 0 2px 6px rgba(34, 52, 24, .06), 0 18px 44px rgba(34, 52, 24, .14);
+
+  /* spazio */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 28px; --s7: 44px;
+  --gutter: 16px;
+  --touch: 44px;
+  --nav-h: 66px;
+  --nav-bottom: max(12px, env(safe-area-inset-bottom));
+
+  /* tipografia */
+  --font: "Inter", -apple-system, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --t-xs: 12.5px; --t-sm: 14px; --t-md: 16px; --t-lg: 20px; --t-xl: 32px; --t-2xl: 46px;
+
+  /* movimento */
+  --dur: 180ms; --ease: cubic-bezier(.2, .7, .3, 1); --molla: cubic-bezier(.34, 1.56, .64, 1);
+
+  color-scheme: light;
+}
