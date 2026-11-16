@@ -72,8 +72,11 @@ cd ~/Developer/personal/cola
 npm install
 # .env.local c'è già con URL e publishable key di Cosa mangiamo (non va nel repo); il modello è .env.example
 npm run dev                  # http://localhost:5173
+npm run demo                 # http://localhost:5174, con un Supabase finto e dati inventati: per provare la UI
 npm test                     # regole di età, calore, peso, scadenze e cose da fare
 ```
+
+La demo (`scripts/demo/`) non legge `.env.local` e non fa richieste di rete: quello che salvi sparisce ricaricando.
 
 Per provarla sull'iPhone nella stessa rete: `npm run dev -- --host` e apri l'indirizzo che stampa.
 Le icone si rifanno con `python3 scripts/icona/disegna.py` (serve Pillow).

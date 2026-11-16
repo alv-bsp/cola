@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "demo": "vite --config scripts/demo/vite.config.js",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test test/*.test.js"
