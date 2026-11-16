@@ -97,7 +97,7 @@ const MODULI = {
   diario: (r) => html`
     ${testa(r.id ? "Nota" : "Nuova nota")}
     ${campo("Titolo", testo("titolo", r.titolo, 'required maxlength="120" placeholder="Prima volta al lago"'))}
-    ${campo("Giorno", giorno("il", r.il, "required"))}
+    ${campo("Giorno", giorno("il", r.il), "Se non lo ricordi lasciala vuota: la tappa resta in cima al Diario, da datare.")}
     ${campo("Racconto", area("testo", r.testo, 5))}`,
 
   contatti: (r) => html`
@@ -331,8 +331,7 @@ function riga_(genere, f) {
       return { ...r, testo: pulito(f.testo), entro: pulito(f.entro), nota: pulito(f.nota) };
     case "diario":
       richiedi(pulito(f.titolo), "Manca il titolo.");
-      richiedi(f.il, "Manca il giorno.");
-      return { ...r, titolo: pulito(f.titolo), il: f.il, testo: pulito(f.testo) };
+      return { ...r, titolo: pulito(f.titolo), il: pulito(f.il), testo: pulito(f.testo) };
     case "contatti":
       richiedi(pulito(f.nome), "Manca il nome.");
       return { ...r, ruolo: f.ruolo || "altro", nome: pulito(f.nome), telefono: pulito(f.telefono), email: pulito(f.email), indirizzo: pulito(f.indirizzo), note: pulito(f.note) };

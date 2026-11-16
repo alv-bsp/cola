@@ -2,7 +2,7 @@ import { html } from "../ui/html.js";
 import { icona } from "../ui/icone.js";
 import { cronologia } from "../regole.js";
 import { meseAnno } from "../tempo.js";
-import { rigaCronologia, titoloPagina } from "./comuni.js";
+import { riga, rigaCronologia, titoloPagina } from "./comuni.js";
 
 export const conTabbar = true;
 
@@ -16,10 +16,19 @@ export function render(s, { avviso }) {
     mesi.at(-1).voci.push(v);
   }
   const nota = html`<button class="btn-tondo" type="button" data-azione="nuovo" data-genere="diario" aria-label="Nuova nota">${icona("plus", 22)}</button>`;
+  const daDatare = s.diario.filter((d) => !d.il).sort((a, b) => (a.creato_il || "").localeCompare(b.creato_il || ""));
   return html`
     ${avviso}
     <div class="pagina">
       ${titoloPagina("Diario", "Pesate, salute, calori, note e cose fatte", { indietro: "#/oggi", azione: nota })}
+      ${daDatare.length ? html`
+        <section class="carta">
+          <h2 class="sezione-titolo">Da datare</h2>
+          <div class="elenco">${daDatare.map((d) => riga({
+            icona: "calendar", tinta: "giallo", titolo: d.titolo, sotto: d.testo || "Tocca per aggiungere il giorno",
+            azione: "modifica", dati: { genere: "diario", id: d.id },
+          }))}</div>
+        </section>` : ""}
       ${mesi.length ? mesi.map(({ m, voci: elenco }) => html`
         <section class="carta">
           <h2 class="sezione-titolo">${meseAnno(`${m}-01`)}</h2>

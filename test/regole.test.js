@@ -173,7 +173,7 @@ test("cronologia dal più recente", () => {
   const voci = cronologia({
     pesi: [{ il: "2026-09-13", kg: 17.6 }, { il: "2026-11-13", kg: 20.5 }],
     calori: [{ inizio: "2026-09-04", fine: "2026-09-24" }],
-    diario: [{ il: "2026-05-27", titolo: "Arrivata a casa" }],
+    diario: [{ il: "2026-05-27", titolo: "Arrivata a casa" }, { il: null, titolo: "Da datare" }],
     cose: [{ testo: "Fatta", fatta_il: "2026-11-02T23:30:00Z" }],
   });
   assert.deepEqual(voci.map((v) => v.il), ["2026-11-13", "2026-11-03", "2026-09-24", "2026-09-13", "2026-09-04", "2026-05-27"]);

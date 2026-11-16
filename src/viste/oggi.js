@@ -21,12 +21,13 @@ export function render(s, { avviso }) {
   const cose = coseDivise(s.cose, oggi);
   const arrivo = inArrivo(s, oggi, 5);
   const storia = cronologia(s).slice(0, 4);
+  const daDatare = s.diario.filter((d) => !d.il).length;
 
   return html`
     ${avviso}
     <div class="oggi">
       ${eroe(s, { peso, cl, scadenze })}
-      ${vuoto() ? partenza() : ""}
+      ${vuoto() && s.partenza ? partenza(s.partenza) : ""}
       ${comeSta(s, { peso, cl, scadenze, cose })}
       ${cartaCiclo(cl, oggi)}
       ${cartaPeso(peso)}
@@ -41,6 +42,7 @@ export function render(s, { avviso }) {
         ${storia.length
           ? html`<div class="elenco">${storia.map((v) => rigaCronologia(v, oggi))}</div>`
           : html`<p class="vuoto-testo">Pesate, vaccini, calori e note finiscono qui, dal più recente.</p>`}
+        ${daDatare ? html`<a class="da-datare" href="#/diario">${icona("calendar", 16)} ${daDatare === 1 ? "Una tappa da datare" : `${daDatare} tappe da datare`}</a>` : ""}
       </section>
     </div>`;
 }
@@ -191,13 +193,16 @@ function cartaPeso(peso) {
 }
 
 // ───────────────────────────────────────── stati vuoti
-function partenza() {
+function partenza(fase) {
+  if (fase === "in corso") {
+    return html`<section class="carta partenza"><p>${icona("paw", 18)} Carico i dati di Cola…</p></section>`;
+  }
   return html`
     <section class="carta partenza">
-      ${testaCarta("Si comincia")}
-      <p>Carico quello che sappiamo già: anagrafica, tre pesate, il primo calore, il contatto di ATS Brianza e le cose
-      ancora aperte. Vaccini e antiparassitari li copi dal libretto.</p>
-      <button class="btn primario largo" type="button" data-azione="partenza">${icona("paw", 18)} Carica i dati di partenza</button>
+      ${testaCarta("Dati di partenza")}
+      <p>Non sono riuscito a caricare i dati di Cola (anagrafica, pesate, primo calore, contatti, cose da fare). Riprova
+      quando sei online.</p>
+      <button class="btn primario largo" type="button" data-azione="partenza">${icona("paw", 18)} Riprova</button>
     </section>`;
 }
 

@@ -8,6 +8,7 @@ const VUOTO = () => ({
   caricamento: false,     // dati in arrivo
   errore: null,           // messaggio da mostrare in alto, se i dati non arrivano
   membro: null,           // false se l'utente non è in cola_membri (vede tutto vuoto)
+  partenza: null,         // dati di partenza: null · "in corso" · "fallita"
   profilo: null,          // la riga di cola_profilo, null se non c'è ancora
   pesi: [],
   calori: [],

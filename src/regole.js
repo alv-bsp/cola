@@ -324,7 +324,7 @@ export function cronologia({ pesi, salute, calori, diario, cose }) {
     voci.push({ genere: "calore", il: c.inizio, titolo: "Inizio del calore", sotto: c.note || "", rif: c });
     if (c.fine) voci.push({ genere: "calore", il: c.fine, titolo: "Fine del calore", sotto: `${giorniTra(c.inizio, c.fine) + 1} giorni`, rif: c });
   }
-  for (const d of diario || []) voci.push({ genere: "nota", il: d.il, titolo: d.titolo, sotto: d.testo || "", rif: d });
+  for (const d of (diario || []).filter((x) => x.il)) voci.push({ genere: "nota", il: d.il, titolo: d.titolo, sotto: d.testo || "", rif: d });
   for (const c of (cose || []).filter((x) => x.fatta_il)) voci.push({ genere: "cosa", il: giornoRoma(c.fatta_il), titolo: c.testo, sotto: "Fatto", rif: c });
   return voci.sort((a, b) => b.il.localeCompare(a.il));
 }

@@ -62,8 +62,8 @@ Regole (in `src/regole.js`, provate in `test/regole.test.js`):
    Quando è verde l'app è su `https://alv-bsp.github.io/cola/`. Lancia anche una volta a mano "Keep-alive Supabase"
    per controllare che risponda `"pong"`.
 4. **Sull'iPhone** (tu e Giulia): apri l'indirizzo in Safari → Condividi → **Aggiungi alla schermata Home**, apri
-   l'app da lì e accedi con l'account di Cosa mangiamo. Al primo accesso, in Oggi, **Carica i dati di partenza**
-   (da `src/partenza.js`), poi tocca il ritratto per mettere la foto di Cola.
+   l'app da lì e accedi con l'account di Cosa mangiamo. Al primo accesso, con il database vuoto, l'app carica da sola
+   i dati di partenza (`src/partenza.js`); poi tocca il ritratto per mettere la foto di Cola.
 
 ## Sviluppo in locale
 
@@ -133,7 +133,9 @@ test/                      node --test
   con lo stesso tipo e nome, così lo storico resta intero e "Fatto oggi" è solo un evento in più.
 - **Stime dichiarate**: prossimo calore, fine non segnata, fascia del peso e proiezione da adulta sono sempre
   etichettati come stime, con il ± o la parola.
-- **Niente vaccini nei dati di partenza**: le date giuste sono sul libretto; meglio vuoto che inventato.
+- **Dati di partenza dalla memoria**: anagrafica, pesate, primo calore, misure, alimentazione, regole per chi la tiene,
+  contatti e cose aperte vengono dalla memoria e dalla sua storia su Git. Si caricano da soli al primo accesso, una volta
+  sola (quando non c'è ancora il profilo). Niente vaccini né tappe senza data: meglio vuoto che inventato.
 - **Notifiche push rimandate** alla seconda tappa: per ora le scadenze stanno in Oggi e nella barra.
 - **Niente service worker**: l'offline non è richiesto, e così non c'è una cache da invalidare a ogni rilascio.
 - **Dati in memoria**: poche centinaia di righe in tutto, si carica tutto dopo il login.

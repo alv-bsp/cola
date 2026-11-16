@@ -117,9 +117,10 @@ create table public.cola_cose (
 );
 
 -- ─── Diario: tappe e note ───────────────────────────────────────────
+-- il vuoto = tappa ancora da datare (compare in cima al Diario finché non ha un giorno).
 create table public.cola_diario (
   id        uuid primary key default gen_random_uuid(),
-  il        date not null,
+  il        date,
   titolo    text not null check (char_length(btrim(titolo)) between 1 and 120),
   testo     text check (char_length(testo) <= 4000),
   creato_da uuid default auth.uid() references auth.users (id) on delete set null,

@@ -4,7 +4,7 @@ import "./stile/componenti.css";
 
 import { configurato } from "./config.js";
 import { sb } from "./supabase.js";
-import { stato, aggiorna, ascolta, azzeraDati } from "./stato.js";
+import { stato, aggiorna, ascolta, azzeraDati, vuoto } from "./stato.js";
 import { caricaTutto, caricaPartenza, salvaProfilo, messaggioErrore } from "./dati.js";
 import { preparaFoto, caricaFoto, rimuoviFoto, idrataFoto, urlInCache } from "./foto.js";
 import { PARTENZA } from "./partenza.js";
@@ -128,9 +128,24 @@ function cambiaPagina() {
   else fai();
 }
 
-// ───────────────────────────────────────── azioni
-let caricandoPartenza = false;
+// ───────────────────────────────────────── dati di partenza
+// Al primo accesso, con il database vuoto, i dati di Cola (src/partenza.js) si caricano da soli. Una volta che
+// c'è il profilo non succede più, anche se poi cancelli pesate o calori.
+async function caricaDatiDiPartenza() {
+  if (stato.partenza === "in corso") return;
+  aggiorna({ partenza: "in corso" });
+  try {
+    await caricaPartenza(PARTENZA);
+    aggiorna({ partenza: null });
+    toast("Ho caricato i dati di Cola. Controllali nel passaporto.", { durata: 4500 });
+  } catch (e) {
+    console.error("partenza", e);
+    aggiorna({ partenza: "fallita" });
+    toast(messaggioErrore(e));
+  }
+}
 
+// ───────────────────────────────────────── azioni
 const AZIONI = {
   aggiungi: () => moduli.apriAggiungi(),
   nuovo: (el) => moduli.apri(el.dataset.genere, { preset: el.dataset.tipo ? { tipo: el.dataset.tipo } : {} }),
@@ -148,21 +163,7 @@ const AZIONI = {
   "foto-profilo": () => sceltaFoto.click(),
   salta: (el) => document.getElementById(el.dataset.a)?.scrollIntoView({ behavior: "smooth", block: "start" }),
   riprova: () => ricarica(),
-  partenza: async (el) => {
-    if (caricandoPartenza) return;
-    caricandoPartenza = true;
-    el.disabled = true;
-    try {
-      await caricaPartenza(PARTENZA);
-      toast("Dati di Cola caricati. Controllali nel passaporto.", { durata: 4500 });
-    } catch (e) {
-      console.error("partenza", e);
-      el.disabled = false;
-      toast(messaggioErrore(e));
-    } finally {
-      caricandoPartenza = false;
-    }
-  },
+  partenza: () => caricaDatiDiPartenza(),
   esci: async () => {
     chiudiFoglio();
     await esci();
@@ -225,9 +226,10 @@ document.addEventListener("visibilitychange", () => {
   else aggiorna({});
 });
 
-function ricarica() {
+async function ricarica() {
   ultimoCaricamento = Date.now();
-  return caricaTutto();
+  await caricaTutto();
+  if (stato.membro && !stato.errore && vuoto() && stato.partenza === null) await caricaDatiDiPartenza();
 }
 
 // ───────────────────────────────────────── avvio
