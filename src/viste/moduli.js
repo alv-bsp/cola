@@ -27,7 +27,8 @@ const campo = (etichetta, controllo, aiuto = "") => html`
 // attr sono attributi scritti qui nel codice (mai dati): passano così come sono.
 const testo = (nome, valore, attr = "") => html`<input type="text" name="${nome}" value="${valore ?? ""}" ${raw(attr)}>`;
 const giorno = (nome, valore, attr = "") => html`<input type="date" name="${nome}" value="${valore ?? ""}" ${raw(attr)}>`;
-const area = (nome, valore, righe = 3) => html`<textarea name="${nome}" rows="${righe}">${valore ?? ""}</textarea>`;
+// max = il limite di caratteri della colonna in supabase/schema.sql
+const area = (nome, valore, righe = 3, max = 1000) => html`<textarea name="${nome}" rows="${righe}" maxlength="${max}">${valore ?? ""}</textarea>`;
 const numero = (nome, valore, attr = "") =>
   html`<input type="text" inputmode="decimal" name="${nome}" value="${valore != null && valore !== "" ? String(valore).replace(".", ",") : ""}" ${raw(attr)}>`;
 
@@ -83,7 +84,7 @@ const MODULI = {
       ${scorciatoie("prossimo_il", [["1 mese", 'data-mesi="1" data-da="il"'], ["3 mesi", 'data-mesi="3" data-da="il"'], ["6 mesi", 'data-mesi="6" data-da="il"'], ["1 anno", 'data-mesi="12" data-da="il"'], ["Nessuna", 'data-vuota="1"']])}
       ${campo("Veterinario", html`<input type="text" name="veterinario" value="${r.veterinario ?? ""}" list="sugg-vet" maxlength="80" autocomplete="off">
         <datalist id="sugg-vet">${veterinari().map((n) => html`<option value="${n}"></option>`)}</datalist>`)}
-      ${campo("Note", area("note", r.note), r.tipo === "visita" ? "Cosa ha detto, cosa ha prescritto, quanto è costata." : "")}`;
+      ${campo("Note", area("note", r.note, 3, 2000), r.tipo === "visita" ? "Cosa ha detto, cosa ha prescritto, quanto è costata." : "")}`;
   },
 
   cose: (r) => html`
@@ -98,7 +99,7 @@ const MODULI = {
     ${testa(r.id ? "Nota" : "Nuova nota")}
     ${campo("Titolo", testo("titolo", r.titolo, 'required maxlength="120" placeholder="Prima volta al lago"'))}
     ${campo("Giorno", giorno("il", r.il), "Se non lo ricordi lasciala vuota: la tappa resta in cima al Diario, da datare.")}
-    ${campo("Racconto", area("testo", r.testo, 5))}`,
+    ${campo("Racconto", area("testo", r.testo, 5, 4000))}`,
 
   contatti: (r) => html`
     ${testa(r.id ? "Contatto" : "Nuovo contatto")}
@@ -150,11 +151,11 @@ const PROFILO = {
     ${testa("Alimentazione")}
     ${campo("Crocchette", testo("crocchette", p.crocchette, 'maxlength="120"'))}
     ${campo("Razione (g al giorno)", html`<input type="text" inputmode="numeric" name="razione_g" value="${p.razione_g ?? ""}">`)}
-    ${campo("Pasti e regole", area("pasti", p.pasti, 4))}`,
+    ${campo("Pasti e regole", area("pasti", p.pasti, 4, 300))}`,
 
   note: (p) => html`
     ${testa("Note")}
-    ${campo("Note", area("note", p.note, 8), "Allergie, abitudini, istruzioni per chi la tiene.")}`,
+    ${campo("Note", area("note", p.note, 8, 4000), "Allergie, abitudini, istruzioni per chi la tiene.")}`,
 };
 
 // ───────────────────────────────────────── apertura

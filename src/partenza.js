@@ -15,10 +15,10 @@ export const PARTENZA = {
     provenienza: "Ravenna",
     crocchette: "Royal Canin Medium Puppy",
     razione_g: 335,
+    // Al massimo 300 caratteri (vincolo in supabase/schema.sql, controllato da test/partenza.test.js)
     pasti:
-      "Due pasti, circa 12 ore tra uno e l'altro: la mattina verso le 9-10 e la sera verso le 21-22 (la cena è servita alle 20). " +
-      "Uno a tempo (15 minuti, poi ciotola via), l'altro lasciato finché non lo finisce. Quale dei due resta libero: da decidere. " +
-      "Razione di 330-340 g al giorno, ferma a quando pesava 13 kg: da ricalcolare.",
+      "Due pasti, circa 12 ore tra uno e l'altro: verso le 9-10 e verso le 21-22 (la cena è servita alle 20). " +
+      "Uno a tempo (15 minuti, poi ciotola via), l'altro lasciato finché non lo finisce. Quale dei due resta libero: da decidere.",
     garrese_cm: 50,
     garrese_il: "2026-09-13",
     peso_adulto_min: 23,

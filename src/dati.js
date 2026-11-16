@@ -144,9 +144,10 @@ export async function caricaPartenza(p) {
   const daRiempire = Object.fromEntries(Object.entries(p.profilo).filter(([k]) => attuale[k] == null));
   const { error } = await sb.from("cola_profilo").upsert({ id: 1, ...daRiempire });
   if (error) throw error;
+  // Solo negli elenchi ancora vuoti: se un giro precedente si è fermato a metà, Riprova non doppia niente.
   const inserimenti = [
     ["pesi", p.pesi], ["calori", p.calori], ["salute", p.salute], ["cose", p.cose], ["diario", p.diario], ["contatti", p.contatti],
-  ].filter(([, righe]) => righe?.length);
+  ].filter(([g, righe]) => righe?.length && !stato[g].length);
   const risposte = await Promise.all(inserimenti.map(([g, righe]) => sb.from(TABELLE[g]).insert(righe)));
   const err = risposte.find((r) => r.error)?.error;
   await caricaTutto();
