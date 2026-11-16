@@ -20,12 +20,15 @@
 .barra-su-destra { margin-left: auto; display: flex; align-items: center; gap: var(--s3); }
 .solo-largo { display: none !important; }
 .avatar {
+  position: relative;
   width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
   display: grid; place-items: center;
   background: var(--lime-chiaro); color: var(--lime-scuro);
   border: 2.5px solid #fff; box-shadow: var(--ombra);
 }
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* Le foto riempiono il contenitore in assoluto: dentro un <button> o <a> a griglia, Safari calcola male l'altezza al 100%
+   e la foto scende lasciando una fascia vuota in alto. */
+.avatar img, .ritratto-foto img, .documento-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 /* Barra in basso: vetro sospeso, il + al centro in rilievo */
 .tabbar {
@@ -269,7 +272,6 @@ button.riga:active, a.riga:active { opacity: .7; }
   box-shadow: var(--ombra-forte);
   color: var(--lime-scuro);
 }
-.ritratto-foto img { width: 100%; height: 100%; object-fit: cover; }
 .ritratto-vuoto { display: grid; justify-items: center; gap: 8px; }
 .ritratto-vuoto small { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 
@@ -490,6 +492,7 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
 .documento-testa span { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--erba); }
 .documento-corpo { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; align-items: start; }
 .documento-foto {
+  position: relative;
   width: 96px; height: 120px; padding: 0;
   display: grid; place-items: center;
   border-radius: 16px; overflow: hidden;
@@ -497,7 +500,6 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
   background: #dcebc2; color: var(--lime-scuro);
   box-shadow: var(--ombra);
 }
-.documento-foto img { width: 100%; height: 100%; object-fit: cover; }
 .documento-dati { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
 .documento-dati .largo { grid-column: 1 / -1; }
 .documento-dati dt { font-size: 10.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
