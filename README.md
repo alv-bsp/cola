@@ -135,7 +135,8 @@ test/                      node --test
   etichettati come stime, con il ± o la parola.
 - **Dati di partenza dalla memoria**: anagrafica, pesate, primo calore, misure, alimentazione, regole per chi la tiene,
   contatti e cose aperte vengono dalla memoria e dalla sua storia su Git. Si caricano da soli al primo accesso, una volta
-  sola (quando non c'è ancora il profilo). Niente vaccini né tappe senza data: meglio vuoto che inventato.
+  sola: quando il profilo non ha ancora la data di nascita e non c'è nessun altro dato. Del profilo si riempiono solo i
+  campi vuoti, così una foto messa prima resta. Niente vaccini: meglio vuoto che inventato.
 - **Notifiche push rimandate** alla seconda tappa: per ora le scadenze stanno in Oggi e nella barra.
 - **Niente service worker**: l'offline non è richiesto, e così non c'è una cache da invalidare a ogni rilascio.
 - **Dati in memoria**: poche centinaia di righe in tutto, si carica tutto dopo il login.

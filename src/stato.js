@@ -37,9 +37,13 @@ export function ascolta(f) {
 
 export const azzeraDati = () => aggiorna(VUOTO());
 
-/** Nessun dato salvato: si propone di caricare quelli di partenza. */
+/**
+ * Nessun dato di Cola ancora: si caricano quelli di partenza. Il profilo può già esserci se la foto è stata messa
+ * prima (salvarla crea la riga), ma senza data di nascita non è mai stato compilato.
+ */
 export const vuoto = () =>
-  stato.caricato && !stato.profilo && !stato.pesi.length && !stato.calori.length && !stato.salute.length && !stato.cose.length;
+  stato.caricato && !stato.profilo?.nata_il &&
+  !stato.pesi.length && !stato.calori.length && !stato.salute.length && !stato.cose.length && !stato.diario.length;
 
 export const nomeCane = () => stato.profilo?.nome || "Cola";
 

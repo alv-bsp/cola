@@ -135,9 +135,14 @@ export async function salvaProfilo(campi) {
   return data;
 }
 
-/** Carica i dati di partenza (src/partenza.js) in un colpo solo. */
+/**
+ * Carica i dati di partenza (src/partenza.js) in un colpo solo. Del profilo riempie solo i campi vuoti:
+ * una foto (o altro) messo prima resta com'è.
+ */
 export async function caricaPartenza(p) {
-  const { error } = await sb.from("cola_profilo").upsert({ id: 1, ...p.profilo });
+  const attuale = stato.profilo || {};
+  const daRiempire = Object.fromEntries(Object.entries(p.profilo).filter(([k]) => attuale[k] == null));
+  const { error } = await sb.from("cola_profilo").upsert({ id: 1, ...daRiempire });
   if (error) throw error;
   const inserimenti = [
     ["pesi", p.pesi], ["calori", p.calori], ["salute", p.salute], ["cose", p.cose], ["diario", p.diario], ["contatti", p.contatti],
