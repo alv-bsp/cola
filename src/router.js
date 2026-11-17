@@ -1,8 +1,10 @@
 // Routing a hash: su GitHub Pages non serve nessun ripiego lato server.
-//   #/oggi · #/salute · #/cose · #/passaporto     le sezioni della barra
+//   #/oggi · #/salute · #/cose · #/addestramento    le sezioni della barra in basso
+//   #/passaporto                                   dalla foto tonda in alto a destra (e nella barra in alto su desktop)
 //   #/peso · #/diario                              pagine raggiunte dalle carte di Oggi
-export const SEZIONI = ["oggi", "salute", "cose", "passaporto"];
-const PAGINE = [...SEZIONI, "peso", "diario"];
+export const SEZIONI = ["oggi", "salute", "cose", "addestramento"];
+export const NAV_ALTA = [...SEZIONI, "passaporto"];
+const PAGINE = [...NAV_ALTA, "peso", "diario"];
 const GENITORE = { peso: "oggi", diario: "oggi" };
 
 export function rotta() {

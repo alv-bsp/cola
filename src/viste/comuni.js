@@ -21,6 +21,8 @@ export function aspetto(voce) {
     compleanno: { icona: "cake", tinta: "rosa" },
     peso: { icona: "weight", tinta: "verde" },
     nota: { icona: "notebook", tinta: "giallo" },
+    trick: { icona: "award", tinta: "giallo" },
+    soggiorno: { icona: voce.tipo === "pensione" || voce.rif?.tipo === "pensione" ? "bed" : "house", tinta: "arancio" },
   }[voce.genere] || { icona: "paw", tinta: "verde" };
 }
 
@@ -75,6 +77,7 @@ export function rigaInArrivo(v, oggi) {
   const a = aspetto(v);
   const azione = v.genere === "salute" ? { azione: "gruppo", dati: { chiave: v.rif.chiave } }
     : v.genere === "cosa" ? { azione: "modifica", dati: { genere: "cose", id: v.rif.id } }
+    : v.genere === "soggiorno" ? { azione: "modifica", dati: { genere: "soggiorni", id: v.rif.id } }
     : v.genere === "calore" ? { href: "#/salute" }
     : { href: "#/passaporto" };
   return riga({
@@ -86,7 +89,7 @@ export function rigaInArrivo(v, oggi) {
 /** Una voce della cronologia come riga. */
 export function rigaCronologia(v, oggi) {
   const a = aspetto(v);
-  const genere = { peso: "pesi", salute: "salute", calore: "calori", nota: "diario", cosa: "cose" }[v.genere];
+  const genere = { peso: "pesi", salute: "salute", calore: "calori", nota: "diario", cosa: "cose", trick: "trick", soggiorno: "soggiorni" }[v.genere];
   return riga({
     icona: a.icona, tinta: a.tinta, titolo: v.titolo, sotto: v.sotto, data: data(v.il, oggi),
     azione: "modifica", dati: { genere, id: v.rif.id },

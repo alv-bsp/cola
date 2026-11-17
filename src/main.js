@@ -5,12 +5,13 @@ import "./stile/componenti.css";
 import { configurato } from "./config.js";
 import { sb } from "./supabase.js";
 import { stato, aggiorna, ascolta, azzeraDati, vuoto } from "./stato.js";
-import { caricaTutto, caricaPartenza, salvaProfilo, messaggioErrore } from "./dati.js";
+import { caricaTutto, caricaPartenza, caricaTrickBase, salvaProfilo, messaggioErrore } from "./dati.js";
 import { preparaFoto, caricaFoto, rimuoviFoto, idrataFoto, urlInCache } from "./foto.js";
 import { PARTENZA } from "./partenza.js";
+import { TRICK_BASE } from "./trick-base.js";
 import { esci } from "./accesso.js";
 import { coseDivise } from "./regole.js";
-import { rotta, normalizza, SEZIONI } from "./router.js";
+import { rotta, normalizza, NAV_ALTA } from "./router.js";
 import { html } from "./ui/html.js";
 import { icona } from "./ui/icone.js";
 import { toast, chiudiFoglio, preparaFoglio } from "./ui/avvisi.js";
@@ -22,13 +23,15 @@ import * as cose from "./viste/cose.js";
 import * as passaporto from "./viste/passaporto.js";
 import * as peso from "./viste/peso.js";
 import * as diario from "./viste/diario.js";
+import * as addestramento from "./viste/addestramento.js";
 import * as accesso from "./viste/accesso.js";
 
-const VISTE = { oggi, salute, cose, passaporto, peso, diario };
+const VISTE = { oggi, salute, cose, addestramento, passaporto, peso, diario };
 const TAB = {
   oggi: { etichetta: "Oggi", icona: "house" },
   salute: { etichetta: "Salute", icona: "heart-pulse" },
   cose: { etichetta: "Da fare", icona: "list-checks" },
+  addestramento: { etichetta: "Trick", icona: "award" },
   passaporto: { etichetta: "Passaporto", icona: "id-card" },
 };
 const app = document.getElementById("app");
@@ -50,11 +53,11 @@ function guscio() {
     <header class="barra-su">
       <a class="marchio" href="#/oggi" aria-label="Oggi">${icona("paw", 20)}<span>cola</span></a>
       <nav class="nav-alta" aria-label="Sezioni">
-        ${SEZIONI.map((nome) => html`<a href="#/${nome}" ${r.sezione === nome ? html`aria-current="page"` : ""}>${TAB[nome].etichetta}</a>`)}
+        ${NAV_ALTA.map((nome) => html`<a href="#/${nome}" ${r.sezione === nome ? html`aria-current="page"` : ""}>${nome === "addestramento" ? "Addestramento" : TAB[nome].etichetta}</a>`)}
       </nav>
       <div class="barra-su-destra">
         <button class="btn primario piccolo solo-largo" type="button" data-azione="aggiungi">${icona("plus", 18)} Aggiungi</button>
-        <a class="avatar" href="#/passaporto" aria-label="Passaporto">
+        <a class="avatar" href="#/passaporto" aria-label="Passaporto" ${r.nome === "passaporto" ? html`aria-current="page"` : ""}>
           ${p?.miniatura ? html`<img data-foto="${p.miniatura}" ${avatar ? html`src="${avatar}"` : ""} alt="">` : icona("paw", 20)}
         </a>
       </div>
@@ -63,7 +66,7 @@ function guscio() {
     <nav class="tabbar" aria-label="Sezioni">
       ${tab("oggi")}${tab("salute")}
       <button class="tab tab-piu" type="button" data-azione="aggiungi" aria-label="Aggiungi">${icona("plus", 26, 2.4)}</button>
-      ${tab("cose")}${tab("passaporto")}
+      ${tab("cose")}${tab("addestramento")}
     </nav>`;
 }
 
@@ -159,6 +162,22 @@ const AZIONI = {
   "fine-calore": () => moduli.fineCalore(),
   "segna-cosa": (el) => moduli.spunta(el.dataset.id),
   "mostra-fatte": (el, e) => cose.azioni["mostra-fatte"](el, e, disegna),
+  "mostra-imparati": (el, e) => addestramento.azioni["mostra-imparati"](el, e, disegna),
+  livello: (el) => moduli.segnaLivello(el.dataset.id, el.dataset.livello),
+  posto: (el) => moduli.apriPosto(el.dataset.chiave),
+  "nuovo-soggiorno": (el) => moduli.nuovoSoggiorno(el.dataset.chiave),
+  "inizia-trick": (el) => moduli.iniziaTrick(el.dataset.id),
+  "trick-base": async (el) => {
+    el.disabled = true;
+    try {
+      await caricaTrickBase(TRICK_BASE);
+      toast(`${TRICK_BASE.length} trick da iniziare. Sposta quelli che sa già.`, { durata: 4000 });
+    } catch (e) {
+      console.error("trick base", e);
+      el.disabled = false;
+      toast(messaggioErrore(e));
+    }
+  },
   "chiudi-foglio": () => chiudiFoglio(),
   "foto-profilo": () => sceltaFoto.click(),
   salta: (el) => document.getElementById(el.dataset.a)?.scrollIntoView({ behavior: "smooth", block: "start" }),

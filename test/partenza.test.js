@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { PARTENZA } from "../src/partenza.js";
+import { TRICK_BASE } from "../src/trick-base.js";
 
 // I dati di partenza devono rispettare i vincoli di lunghezza di supabase/schema.sql: se uno sfora,
 // il caricamento al primo accesso fallisce (è successo con "pasti").
@@ -24,6 +25,7 @@ const casi = [
   ["cola_cose", PARTENZA.cose],
   ["cola_diario", PARTENZA.diario],
   ["cola_contatti", PARTENZA.contatti],
+  ["cola_trick", TRICK_BASE],
 ];
 
 for (const [tabella, righe] of casi) {

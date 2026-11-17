@@ -4,3 +4,6 @@ dist/
 .env*
 !.env.example
 *.log
+
+# SQL con dati personali (contatti, lotti dei vaccini): si esegue nel SQL Editor, non va nel repo pubblico
+supabase/locale/

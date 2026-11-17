@@ -4,6 +4,8 @@ import {
   giornoRoma, giorniTra, aggiungiGiorni, aggiungiMesi, eta, etaInParole, compleanno,
   ciclo, CALORE, quotaAdulta, fasciaAttesa, andamentoPeso, pesateInOrdine,
   mesiSuggeriti, prossimoSuggerito, gruppi, scadenzeSalute, urgenza, coseDivise, inArrivo, cronologia, formatoKg,
+  normalizzaTrick, conLivello, trickDivisi, traguardi, livelliRaggiunti,
+  posti, durataSoggiorno, notti,
 } from "../src/regole.js";
 
 const profilo = { nata_il: "2026-03-18", peso_adulto_min: 23, peso_adulto_max: 26 };
@@ -179,4 +181,81 @@ test("cronologia dal più recente", () => {
   assert.deepEqual(voci.map((v) => v.il), ["2026-11-13", "2026-11-03", "2026-09-24", "2026-09-13", "2026-09-04", "2026-05-27"]);
   assert.equal(voci[0].sotto, "+2,9 kg");
   assert.equal(formatoKg(20), "20,0");
+});
+
+test("addestramento: un livello fa iniziare, tre fanno imparare", () => {
+  const t = { id: 1, nome: "Zampa", stato: "da-iniziare", iniziato_il: null, casa_il: null, fuori_il: null, distrazioni_il: null, imparato_il: null };
+  assert.deepEqual(conLivello(t, "casa", "2026-11-17"), { stato: "in-corso", iniziato_il: "2026-11-17", casa_il: "2026-11-17" });
+  const quasi = { ...t, stato: "in-corso", iniziato_il: "2026-10-01", casa_il: "2026-10-10", fuori_il: "2026-11-01" };
+  assert.deepEqual(conLivello(quasi, "distrazioni", "2026-11-17"), { stato: "imparato", distrazioni_il: "2026-11-17", imparato_il: "2026-11-17" });
+  assert.equal(livelliRaggiunti(quasi), 2);
+});
+
+test("addestramento: lo stato scelto a mano vale, e le date seguono", () => {
+  const base = { nome: "Resta", iniziato_il: null, casa_il: "2026-10-10", fuori_il: "2026-10-20", distrazioni_il: "2026-11-01", imparato_il: null };
+  const scelto = normalizzaTrick({ ...base, stato: "in-corso", _statoScelto: true }, "2026-11-17");
+  assert.equal(scelto.stato, "in-corso");
+  assert.equal(scelto.imparato_il, null);
+  assert.equal(scelto.iniziato_il, "2026-10-10");
+  assert.equal("_statoScelto" in scelto, false);
+  const auto = normalizzaTrick({ ...base, stato: "in-corso" }, "2026-11-17");
+  assert.equal(auto.stato, "imparato");
+  assert.equal(auto.imparato_il, "2026-11-01");
+  const segnato = normalizzaTrick({ nome: "Giro", stato: "imparato", _statoScelto: true }, "2026-11-17");
+  assert.equal(segnato.imparato_il, "2026-11-17");
+  assert.equal(segnato.iniziato_il, "2026-11-17");
+  const indietro = normalizzaTrick({ nome: "Giro", stato: "in-corso", imparato_il: "2026-11-01", _statoScelto: true }, "2026-11-17");
+  assert.equal(indietro.imparato_il, null);
+});
+
+test("addestramento: divisi per stato e traguardi nel diario", () => {
+  const trick = [
+    { id: 1, nome: "Seduto", stato: "imparato", iniziato_il: "2026-06-01", casa_il: "2026-06-05", fuori_il: "2026-06-20", distrazioni_il: "2026-07-01", imparato_il: "2026-07-01" },
+    { id: 2, nome: "Zampa", stato: "in-corso", iniziato_il: "2026-11-01", casa_il: "2026-11-10" },
+    { id: 3, nome: "Resta", stato: "in-corso", iniziato_il: "2026-10-01" },
+    { id: 4, nome: "Giro", stato: "da-iniziare", creato_il: "2026-11-17T10:00:00Z" },
+  ];
+  const d = trickDivisi(trick);
+  assert.deepEqual(d.inCorso.map((t) => t.id), [2, 3]);
+  assert.deepEqual(d.daIniziare.map((t) => t.id), [4]);
+  assert.deepEqual(d.imparati.map((t) => t.id), [1]);
+  const tr = traguardi(trick);
+  assert.equal(tr[0].titolo, "Zampa: in casa");
+  assert.equal(tr.filter((x) => x.imparato).length, 1);
+  const voci = cronologia({ trick });
+  assert.equal(voci[0].genere, "trick");
+  assert.equal(voci.length, tr.length);
+});
+
+test("dog sitter e pensioni: durata, raggruppamento e giudizio dell'ultima volta", () => {
+  assert.equal(durataSoggiorno({ dal: "2026-08-08", al: null }), "una giornata");
+  assert.equal(durataSoggiorno({ dal: "2026-08-08", al: "2026-08-08" }), "una giornata");
+  assert.equal(durataSoggiorno({ dal: "2026-08-08", al: "2026-08-09" }), "una notte");
+  assert.equal(durataSoggiorno({ dal: "2026-09-12", al: "2026-09-19" }), "7 notti");
+  const soggiorni = [
+    { id: 1, tipo: "dog-sitter", nome: "Chiara", citta: "Lecco", dal: "2026-08-08", al: "2026-08-09", giudizio: "su" },
+    { id: 2, tipo: "dog-sitter", nome: "chiara ", citta: null, dal: "2026-10-03", al: "2026-10-05", giudizio: null },
+    { id: 3, tipo: "pensione", nome: "Il Prato", citta: "Bergamo", dal: "2026-09-12", al: "2026-09-19", giudizio: "giu" },
+  ];
+  const p = posti(soggiorni);
+  assert.deepEqual(p.map((x) => x.nome), ["chiara", "Il Prato"]);
+  assert.equal(p[0].soggiorni.length, 2);
+  assert.equal(p[0].giudizio, "su");        // l'ultima non ha giudizio: vale quello prima
+  assert.equal(p[0].citta, "Lecco");
+  assert.equal(p[0].notti, 3);
+  assert.deepEqual(p[1].conteggi, { su: 0, medio: 0, giu: 1 });
+  assert.equal(notti(soggiorni[2]), 7);
+});
+
+test("dog sitter e pensioni: le prossime in arrivo, tutte nel diario", () => {
+  const soggiorni = [
+    { id: 1, tipo: "dog-sitter", nome: "Chiara", citta: "Lecco", dal: "2026-12-20", al: "2026-12-27" },
+    { id: 2, tipo: "pensione", nome: "Il Prato", citta: "Bergamo", dal: "2026-09-12", al: "2026-09-19", giudizio: "medio" },
+  ];
+  const arrivo = inArrivo({ soggiorni }, "2026-11-17", 10);
+  assert.deepEqual(arrivo.map((v) => v.titolo), ["Da Chiara"]);
+  assert.equal(arrivo[0].sotto, "Lecco · 7 notti");
+  const voci = cronologia({ soggiorni });
+  assert.deepEqual(voci.map((v) => v.titolo), ["Da Chiara", "Da Il Prato 😐"]);
+  assert.equal(voci[1].sotto, "Pensione · Bergamo · 7 notti");
 });

@@ -28,7 +28,14 @@ installabile sulla schermata Home; funziona anche da computer.
   settimana, la proiezione da adulta e l'elenco delle pesate.
 - **Da fare**: si scrive in cima e si aggiunge; divise in In ritardo, Questa settimana, Più avanti, Senza data. La
   spunta si annulla dal messaggio in basso. Il numero rosso sulla barra conta quelle in ritardo.
-- **Passaporto**: il documento con foto, anagrafica, microchip, passaporto UE, pedigree; misure, alimentazione,
+- **Addestramento** (tab Trick): i trick in corso con tre livelli da spuntare, in casa, fuori e con distrazioni, ognuno
+  con il giorno in cui è arrivato. Un tocco su un livello lo segna oggi; con tutti e tre il trick diventa imparato. Sotto
+  quelli da iniziare (con **Inizia**) e gli imparati, con quanto ci è voluto. I traguardi finiscono nel Diario. La scheda
+  vuota propone la lista base (`src/trick-base.js`): tredici trick comuni, ognuno con un consiglio per insegnarlo.
+- **Dog sitter e pensioni** (nel Passaporto): ogni volta che sta da qualcuno, chi, in che città, dal giorno al giorno e
+  com'è andata (👍 sì, 😐 medio, 👎 no). Un posto per riga con il giudizio dell'ultima volta; toccandolo, la storia e
+  **Nuova permanenza** già compilata. Le permanenze future compaiono in In arrivo, tutte nel Diario.
+- **Passaporto** (dalla foto tonda in alto a destra): il documento con foto, anagrafica, microchip, passaporto UE, pedigree; misure, alimentazione,
   contatti (un tocco per chiamare o scrivere), note e account.
 - **+** al centro della barra: peso, vaccino, antiparassitario, visita, calore, cosa da fare, nota, contatto.
 - Ogni eliminazione si annulla dal messaggio in basso. Tornando sull'app dopo un minuto i dati si rileggono, così
@@ -64,6 +71,17 @@ Regole (in `src/regole.js`, provate in `test/regole.test.js`):
 4. **Sull'iPhone** (tu e Giulia): apri l'indirizzo in Safari → Condividi → **Aggiungi alla schermata Home**, apri
    l'app da lì e accedi con l'account di Cosa mangiamo. Al primo accesso, con il database vuoto, l'app carica da sola
    i dati di partenza (`src/partenza.js`); poi tocca il ritratto per mettere la foto di Cola.
+
+### Modifiche allo schema
+
+Le installazioni esistenti eseguono nel SQL Editor i file di `supabase/modifiche/`, in ordine di data, una volta sola
+(`schema.sql` li contiene già):
+
+- `2026-11-17-addestramento.sql`: tabella dei trick, e giorno del diario facoltativo.
+- `2026-11-17-soggiorni.sql`: dog sitter e pensioni.
+
+I file in `supabase/locale/` non vanno nel repo (sono in `.gitignore`): servono a caricare dati personali, come
+contatti e lotti dei vaccini, e si eseguono una volta dal SQL Editor.
 
 ## Sviluppo in locale
 
@@ -116,10 +134,12 @@ src/partenza.js            i dati di partenza di Cola
 src/foto.js                foto: ridimensiona, carica, URL firmati (stesso codice di Armadio e Piante)
 src/tempo.js               date in parole
 src/router.js              routing a hash: #/oggi, #/salute, #/cose, #/passaporto, #/peso, #/diario
+src/trick-base.js          la lista base dell'addestramento
 src/viste/                 una vista per pagina, più moduli.js (tutti i fogli di inserimento) e comuni.js
 src/ui/                    template HTML con escape, icone, grafici (barre, linea, onda), toast e foglio
 src/stile/                 token, base e componenti
 supabase/schema.sql        tabelle, grant, RLS, bucket, ping(), membri
+supabase/modifiche/        migrazioni per chi ha già lo schema
 scripts/icona/disegna.py   l'icona dell'app in SVG e PNG
 test/                      node --test
 ```
@@ -144,6 +164,7 @@ test/                      node --test
 ## Tappe
 
 - [x] 1. Scaffold, login, Oggi, Salute, Peso, Da fare, Passaporto, Diario, foto del profilo
+- [x] 1b. Addestramento con livelli, vaccini e pesate dal libretto
 - [ ] 2. Notifiche push per richiami, antiparassitario e cose in scadenza (riusando la funzione di Piante)
 - [ ] 3. Foto nel diario
 - [ ] 4. Rifinitura dopo qualche settimana d'uso

@@ -28,6 +28,7 @@
 }
 /* Le foto riempiono il contenitore in assoluto: dentro un <button> o <a> a griglia, Safari calcola male l'altezza al 100%
    e la foto scende lasciando una fascia vuota in alto. */
+.avatar[aria-current="page"] { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(168, 214, 74, .35), var(--ombra); }
 .avatar img, .ritratto-foto img, .documento-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 /* Barra in basso: vetro sospeso, il + al centro in rilievo */
@@ -515,6 +516,63 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
 .account .btn { margin-top: 4px; }
 .versione { margin-top: 12px; text-align: center; font-size: 12px; color: var(--ink-3); }
 
+/* Addestramento */
+.sezione-trick > .sezione-titolo { margin: 6px 4px 10px; }
+.carta.trick { padding: 14px; }
+.trick-testa { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; padding: 2px 2px 12px; border: 0; background: none; text-align: left; font: inherit; color: inherit; }
+.trick-nome { display: grid; min-width: 0; }
+.trick-nome b { font-size: 18px; font-weight: 720; letter-spacing: -.02em; }
+.trick-nome small, .trick-riga small { font-size: 13.5px; color: var(--ink-2); }
+.trick-da { flex: none; font-size: 12.5px; color: var(--ink-3); }
+.livelli { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.livello {
+  display: grid; justify-items: center; gap: 4px;
+  padding: 10px 4px 9px;
+  border-radius: 16px;
+  border: 1.5px dashed rgba(26, 29, 24, .16);
+  background: rgba(255, 255, 255, .7);
+  font: inherit; color: var(--ink-2);
+  transition: transform 140ms var(--molla), background var(--dur), border-color var(--dur);
+}
+.livello:active { transform: scale(.95); }
+.livello-pallino { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; border: 2px solid rgba(26, 29, 24, .2); background: #fff; color: #fff; }
+.livello-nome { font-size: 13px; font-weight: 650; text-align: center; line-height: 1.2; }
+.livello small { font-size: 11.5px; color: var(--ink-3); }
+.livello.fatto { border: 1.5px solid transparent; background: linear-gradient(165deg, #edf8c9, #d6ee96); color: var(--ink); }
+.livello.fatto .livello-pallino { border-color: var(--lime-scuro); background: var(--lime-scuro); }
+.livello.fatto small { color: #4c6a1c; font-weight: 600; }
+.trick-riga { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.trick-riga .riga-testo { padding: 2px 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; }
+.carta-testa.interruttore { width: 100%; margin-bottom: 4px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; }
+.carta-testa.interruttore[aria-expanded="true"] svg { transform: rotate(180deg); }
+.carta-testa.interruttore + .elenco { margin-top: 8px; }
+.conta { display: inline-grid; place-items: center; min-width: 26px; height: 26px; margin-left: 6px; padding: 0 7px; border-radius: 13px; background: #fcf2d2; color: #8a5f00; font-size: 14px; vertical-align: 3px; }
+.livelli-date { display: grid; gap: 8px; }
+.livelli-date label { display: grid; grid-template-columns: 118px minmax(0, 1fr); align-items: center; gap: 10px; }
+.livelli-date small { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.livelli-date input { min-width: 0; }
+.trick-mini { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linea); }
+.trick-mini b { font-size: 15.5px; font-weight: 620; }
+.passi { display: flex; gap: 5px; }
+.passi i { width: 22px; height: 8px; border-radius: 4px; background: rgba(26, 29, 24, .1); }
+.passi i.fatto { background: var(--lime-scuro); }
+.traguardo { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: #fcf2d2; color: #7a5300; font-size: 14px; font-weight: 600; }
+.traguardo svg { flex: none; }
+.conta-trick { margin-top: 10px; font-size: 13px; color: var(--ink-3); }
+
+/* Dog sitter e pensioni */
+.tessera.giudizio { font-size: 22px; line-height: 1; }
+.tessera.giudizio[data-tono="su"] { background: #e2f2c8; }
+.tessera.giudizio[data-tono="medio"] { background: #fdecc4; }
+.tessera.giudizio[data-tono="giu"] { background: #fde0db; }
+.tessera.giudizio[data-tono="nessuno"] { background: #fde7da; color: #d9631f; }
+.giudizi-conta { display: flex; gap: 8px; margin-bottom: 14px; }
+.giudizi-conta span { padding: 6px 12px; border-radius: var(--r-pill); background: #eef1ec; font-size: 15px; font-weight: 650; }
+.giudizi-conta span[data-tono="su"] { background: #e2f2c8; }
+.giudizi-conta span[data-tono="medio"] { background: #fdecc4; }
+.giudizi-conta span[data-tono="giu"] { background: #fde0db; }
+.aiuto-campo { margin: -6px 0 14px; }
+
 /* ═════════════════════════════════════════ accesso */
 .accesso { max-width: 440px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 18px) 20px 40px; }
 .accesso .eroe-testo { margin-top: 26px; }
@@ -542,6 +600,7 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
 .scelte .chip { position: relative; }
 .scorciatoie { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 16px; }
 .due { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.due > *, .campo input { min-width: 0; }
 .errore { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: #fde0db; color: #a52c1b; font-size: 14px; }
 .errore[hidden] { display: none; }
 
@@ -587,7 +646,7 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
   margin-bottom: calc(-1 * (env(safe-area-inset-bottom) + 20px));
   background: linear-gradient(to bottom, rgba(247, 250, 243, 0), rgba(247, 250, 243, .98) 26%);
 }
-.griglia-aggiungi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-bottom: 6px; }
+.griglia-aggiungi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding-bottom: 6px; }
 .voce-aggiungi {
   display: grid; justify-items: center; gap: 8px;
   padding: 14px 4px 12px;
@@ -646,7 +705,7 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
       "eroe partenza partenza"
       "eroe come peso"
       "eroe ciclo ciclo"
-      "eroe arrivo arrivo"
+      "eroe arrivo trick"
       "eroe diario diario";
     grid-template-rows: auto auto auto auto 1fr;
     column-gap: 18px;
@@ -661,6 +720,7 @@ dl.dati + .elenco { margin-top: 14px; padding-top: 12px; border-top: 1px solid v
   .peso-carta { grid-area: peso; height: calc(100% - 14px); }
   .ciclo { grid-area: ciclo; }
   .in-arrivo { grid-area: arrivo; }
+  .addestramento-carta { grid-area: trick; }
   .diario-carta { grid-area: diario; }
   .pagina { max-width: 760px; margin: 0 auto; }
   .foglio { bottom: 24px; border-radius: var(--r-xl); border-bottom: 1px solid var(--vetro-bordo); max-height: calc(100dvh - 48px); }

@@ -11,7 +11,13 @@ const TABELLE = {
   cose: "cola_cose",
   diario: "cola_diario",
   contatti: "cola_contatti",
+  trick: "cola_trick",
+  soggiorni: "cola_soggiorni",
 };
+
+// Gli elenchi di sempre. trick e soggiorni si leggono a parte: se la loro tabella manca (modifiche del 17/11 non
+// ancora eseguite) il resto dell'app funziona lo stesso.
+const PRINCIPALI = ["pesi", "calori", "salute", "cose", "diario", "contatti"];
 
 const CAMPI = {
   pesi: "id, il, kg, nota, creato_da, creato_il",
@@ -20,6 +26,8 @@ const CAMPI = {
   cose: "id, testo, entro, nota, fatta_il, fatta_da, creato_da, creato_il",
   diario: "id, il, titolo, testo, creato_da, creato_il",
   contatti: "id, ruolo, nome, telefono, email, indirizzo, note, creato_da, creato_il",
+  trick: "id, nome, comando, stato, iniziato_il, casa_il, fuori_il, distrazioni_il, imparato_il, note, creato_da, creato_il",
+  soggiorni: "id, tipo, nome, citta, dal, al, giudizio, note, creato_da, creato_il",
 };
 
 const CAMPI_PROFILO =
@@ -50,10 +58,12 @@ export function messaggioErrore(e) {
 export async function caricaTutto() {
   aggiorna({ caricamento: true, errore: null });
   const io = stato.sessione?.user?.id;
-  const [membro, profilo, ...elenchi] = await Promise.all([
+  const [membro, profilo, trick, soggiorni, ...elenchi] = await Promise.all([
     sb.from("cola_membri").select("user_id").eq("user_id", io).maybeSingle(),
     sb.from("cola_profilo").select(CAMPI_PROFILO).eq("id", 1).maybeSingle(),
-    ...Object.keys(TABELLE).map((g) => sb.from(TABELLE[g]).select(CAMPI[g]).limit(2000)),
+    sb.from(TABELLE.trick).select(CAMPI.trick).limit(2000),
+    sb.from(TABELLE.soggiorni).select(CAMPI.soggiorni).limit(2000),
+    ...PRINCIPALI.map((g) => sb.from(TABELLE[g]).select(CAMPI[g]).limit(2000)),
   ]);
   const risposte = [membro, profilo, ...elenchi];
   const primoErrore = risposte.find((r) => r.error)?.error;
@@ -67,9 +77,12 @@ export async function caricaTutto() {
   }
 
   const nuovi = {};
-  Object.keys(TABELLE).forEach((g, i) => {
+  PRINCIPALI.forEach((g, i) => {
     nuovi[g] = elenchi[i].error ? stato[g] : elenchi[i].data.map(pulisci);
   });
+  // Tabella che manca: PGRST205 (PostgREST) o 42P01 (Postgres). Con altri errori restano i trick già in memoria.
+  const manca = (r) => Boolean(r.error) && (r.error.code === "PGRST205" || r.error.code === "42P01");
+  for (const [nome, r] of [["trick", trick], ["soggiorni", soggiorni]]) if (r.error && !manca(r)) console.error(nome, r.error);
 
   aggiorna({
     caricamento: false,
@@ -77,6 +90,10 @@ export async function caricaTutto() {
     errore,
     membro: membro.error ? stato.membro : Boolean(membro.data),
     profilo: profilo.error ? stato.profilo : pulisci(profilo.data),
+    trick: trick.error ? stato.trick : trick.data,
+    trickOk: !manca(trick),
+    soggiorni: soggiorni.error ? stato.soggiorni : soggiorni.data,
+    soggiorniOk: !manca(soggiorni),
     ...nuovi,
   });
 }
@@ -133,6 +150,14 @@ export async function salvaProfilo(campi) {
   if (error) throw error;
   aggiorna({ profilo: pulisci(data) });
   return data;
+}
+
+/** Carica la lista base dell'addestramento (src/trick-base.js), solo se non c'è ancora nessun trick. */
+export async function caricaTrickBase(righe) {
+  if (stato.trick.length) return;
+  const { error } = await sb.from(TABELLE.trick).insert(righe.map((r) => ({ stato: "da-iniziare", ...r })));
+  if (error) throw error;
+  await caricaTutto();
 }
 
 /**

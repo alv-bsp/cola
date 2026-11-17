@@ -5,6 +5,7 @@ import { stato, trova, veterinari } from "../stato.js";
 import { salva, elimina, ripristina, salvaProfilo, segnaCosa, messaggioErrore } from "../dati.js";
 import {
   TIPI, SUGGERIMENTI, prossimoSuggerito, mesiSuggeriti, aggiungiGiorni, aggiungiMesi, giorniTra, gruppi, ciclo, urgenza,
+  STATI_TRICK, LIVELLI, normalizzaTrick, conLivello, TIPI_SOGGIORNO, GIUDIZI, posti, durataSoggiorno,
 } from "../regole.js";
 import { data, relativo } from "../tempo.js";
 import { RUOLI } from "./passaporto.js";
@@ -109,6 +110,40 @@ const MODULI = {
     ${campo("Email", html`<input type="email" name="email" value="${r.email ?? ""}" maxlength="120" autocapitalize="off" spellcheck="false" autocomplete="off">`)}
     ${campo("Indirizzo", testo("indirizzo", r.indirizzo, 'maxlength="200"'))}
     ${campo("Note", area("note", r.note))}`,
+
+  trick: (r) => html`
+    ${testa(r.id ? r.nome || "Trick" : "Nuovo trick")}
+    ${campo("Trick", testo("nome", r.nome, 'required maxlength="60" placeholder="Zampa"'))}
+    ${campo("Comando", testo("comando", r.comando, 'maxlength="80" placeholder="la parola o il gesto"'))}
+    <div class="campo"><span>A che punto è</span>${scelte("stato", Object.entries(STATI_TRICK), r.stato)}</div>
+    ${campo("Iniziato il", giorno("iniziato_il", r.iniziato_il))}
+    <div class="campo"><span>Livelli raggiunti</span>
+      <div class="livelli-date">${LIVELLI.map((l) => html`
+        <label><small>${l.nome}</small>${giorno(l.colonna, r[l.colonna])}</label>`)}</div>
+      <small class="aiuto">Il giorno in cui lo fa bene in quella situazione. Vuoto se non ancora: con tutti e tre diventa imparato.</small>
+    </div>
+    ${campo("Imparato il", giorno("imparato_il", r.imparato_il), "Si compila da solo quando segni lo stato Imparato.")}
+    ${campo("Note", area("note", r.note, 3, 2000), "Come lo insegnate, cosa funziona, dove si blocca.")}`,
+
+  soggiorni: (r) => {
+    const nomi = [...new Set(stato.soggiorni.map((x) => x.nome))].sort((a, b) => a.localeCompare(b, "it"));
+    const citta = [...new Set(stato.soggiorni.map((x) => x.citta).filter(Boolean))].sort((a, b) => a.localeCompare(b, "it"));
+    return html`
+      ${testa(r.id ? `Da ${r.nome}` : "Dog sitter o pensione")}
+      <div class="campo"><span>Chi</span>${scelte("tipo", Object.entries(TIPI_SOGGIORNO), r.tipo)}</div>
+      ${campo("Nome", html`<input type="text" name="nome" value="${r.nome ?? ""}" list="sugg-posti" required maxlength="80" autocomplete="off" placeholder="Chiara, Pensione Il Prato…">
+        <datalist id="sugg-posti">${nomi.map((n) => html`<option value="${n}"></option>`)}</datalist>`)}
+      ${campo("Città", html`<input type="text" name="citta" value="${r.citta ?? ""}" list="sugg-citta" maxlength="60" autocomplete="off" placeholder="Milano">
+        <datalist id="sugg-citta">${citta.map((n) => html`<option value="${n}"></option>`)}</datalist>`, "Basta la città, niente indirizzo.")}
+      <div class="due">
+        ${campo("Dal", giorno("dal", r.dal, "required"))}
+        ${campo("Al", giorno("al", r.al))}
+      </div>
+      <p class="aiuto aiuto-campo">Senza «al», o con lo stesso giorno, conta come una giornata.</p>
+      <div class="campo"><span>Com'è andata</span>
+        ${scelte("giudizio", [["", "Da dare"], ...Object.entries(GIUDIZI).map(([k, g]) => [k, `${g.emoji} ${g.nome}`])], r.giudizio || "")}</div>
+      ${campo("Note", area("note", r.note, 3, 1000), "Com'era tornata, cosa è andato bene o storto, quanto è costato.")}`;
+  },
 };
 
 function testoSuggerito(tipo, nome, suggerito) {
@@ -166,6 +201,8 @@ const NUOVO = {
   cose: () => ({}),
   diario: () => ({ il: stato.oggi }),
   contatti: () => ({ ruolo: "veterinario" }),
+  trick: () => ({ stato: "da-iniziare" }),
+  soggiorni: () => ({ tipo: "dog-sitter", dal: stato.oggi }),
 };
 
 /** Apre il modulo di un genere: nuovo (con valori di partenza) o in modifica (con l'id). */
@@ -203,6 +240,8 @@ export function apriAggiungi() {
     ["Calore", "flame", "rosa", 'data-azione="inizio-calore"'],
     ["Da fare", "list-checks", "giallo", 'data-azione="nuovo" data-genere="cose"'],
     ["Nota", "notebook", "giallo", 'data-azione="nuovo" data-genere="diario"'],
+    ["Trick", "award", "giallo", 'data-azione="nuovo" data-genere="trick"'],
+    ["Dog sitter", "house", "arancio", 'data-azione="nuovo" data-genere="soggiorni"'],
     ["Contatto", "users", "grigio", 'data-azione="nuovo" data-genere="contatti"'],
   ];
   apriFoglio(html`
@@ -336,6 +375,24 @@ function riga_(genere, f) {
     case "contatti":
       richiedi(pulito(f.nome), "Manca il nome.");
       return { ...r, ruolo: f.ruolo || "altro", nome: pulito(f.nome), telefono: pulito(f.telefono), email: pulito(f.email), indirizzo: pulito(f.indirizzo), note: pulito(f.note) };
+    case "trick": {
+      richiedi(pulito(f.nome), "Manca il nome del trick.");
+      richiedi(STATI_TRICK[f.stato], "Scegli a che punto è.");
+      const date = ["iniziato_il", ...LIVELLI.map((l) => l.colonna), "imparato_il"];
+      const t = { ...r, nome: pulito(f.nome), comando: pulito(f.comando), stato: f.stato, note: pulito(f.note) };
+      for (const k of date) t[k] = pulito(f[k]);
+      // Lo stato scelto a mano vale: tre livelli non lo promuovono da soli a imparato.
+      return normalizzaTrick({ ...t, _statoScelto: true }, stato.oggi);
+    }
+    case "soggiorni":
+      richiedi(TIPI_SOGGIORNO[f.tipo], "Scegli dog sitter o pensione.");
+      richiedi(pulito(f.nome), "Manca il nome.");
+      richiedi(f.dal, "Manca il giorno di arrivo.");
+      richiedi(!f.al || f.al >= f.dal, "La fine viene prima dell'inizio.");
+      return {
+        ...r, tipo: f.tipo, nome: pulito(f.nome), citta: pulito(f.citta), dal: f.dal, al: pulito(f.al),
+        giudizio: GIUDIZI[f.giudizio] ? f.giudizio : null, note: pulito(f.note),
+      };
     default:
       throw new Error("Modulo sconosciuto.");
   }
@@ -413,6 +470,8 @@ const CONFERME = {
   cose: "Aggiunta alle cose da fare",
   diario: "Nota aggiunta",
   contatti: "Contatto aggiunto",
+  trick: "Trick aggiunto",
+  soggiorni: "Permanenza segnata",
 };
 
 /** Cosa da fare scritta al volo in cima a Da fare. */
@@ -454,3 +513,66 @@ export async function spunta(id) {
   }
 }
 
+
+// ───────────────────────────────────────── addestramento, dai tasti della scheda
+/** Salva alcuni campi di un trick; il messaggio in basso permette di tornare com'era. */
+async function aggiornaTrick(t, campi, messaggio) {
+  const prima = Object.fromEntries(Object.keys(campi).map((k) => [k, t[k] ?? null]));
+  try {
+    await salva("trick", { id: t.id, ...campi });
+    toast(messaggio, { azione: () => salva("trick", { id: t.id, ...prima }).catch((e) => toast(messaggioErrore(e))) });
+  } catch (e) {
+    console.error("trick", e);
+    toast(messaggioErrore(e));
+  }
+}
+
+/** Tocco su un livello: se non è raggiunto lo segna oggi; se lo è, apre il trick per cambiare o togliere la data. */
+export function segnaLivello(id, chiave) {
+  const t = trova("trick", id);
+  if (!t) return;
+  const l = LIVELLI.find((x) => x.chiave === chiave);
+  if (t[l.colonna]) return apri("trick", { id });
+  const campi = conLivello(t, chiave, stato.oggi);
+  const messaggio = campi.stato === "imparato" ? `${t.nome}: imparato!` : `${t.nome}: ${l.nome.toLowerCase()}, oggi`;
+  return aggiornaTrick(t, campi, messaggio);
+}
+
+export function iniziaTrick(id) {
+  const t = trova("trick", id);
+  if (!t) return;
+  return aggiornaTrick(t, { stato: "in-corso", iniziato_il: t.iniziato_il || stato.oggi }, `${t.nome}: si comincia`);
+}
+
+// ───────────────────────────────────────── dog sitter e pensioni
+/** La storia di un dog sitter o di una pensione: tutte le permanenze e quante volte è andata bene. */
+export function apriPosto(chiave) {
+  const p = posti(stato.soggiorni).find((x) => x.chiave === chiave);
+  if (!p) return;
+  const oggi = stato.oggi;
+  const g = p.giudizio ? GIUDIZI[p.giudizio] : null;
+  apriFoglio(html`
+    ${testa(p.nome)}
+    <div class="gruppo-testa">
+      <span class="tessera giudizio" data-tono="${p.giudizio || "nessuno"}">${g ? g.emoji : icona(p.tipo === "pensione" ? "bed" : "house", 22)}</span>
+      <div><b>${[TIPI_SOGGIORNO[p.tipo], p.citta].filter(Boolean).join(" · ")}</b>
+        <small>${p.soggiorni.length === 1 ? "Una volta" : `${p.soggiorni.length} volte`}${p.notti ? `, ${p.notti === 1 ? "una notte" : `${p.notti} notti`} in tutto` : ""}</small></div>
+    </div>
+    <p class="giudizi-conta">${Object.entries(GIUDIZI).map(([k, x]) => html`<span data-tono="${k}">${x.emoji} ${p.conteggi[k]}</span>`)}</p>
+    <button class="btn primario largo" type="button" data-azione="nuovo-soggiorno" data-chiave="${p.chiave}">${icona("plus", 18)} Nuova permanenza</button>
+    <h3 class="sezione-titolo">Storia</h3>
+    <div class="elenco">${p.soggiorni.map((s) => riga({
+      icona: s.tipo === "pensione" ? "bed" : "house", tinta: "arancio",
+      titolo: s.al && s.al !== s.dal ? `${data(s.dal, oggi)} – ${data(s.al, oggi)}` : data(s.dal, oggi),
+      sotto: [durataSoggiorno(s), s.note].filter(Boolean).join(" · ").slice(0, 110),
+      pillola: s.giudizio ? html`<span class="pillola" data-tono="${GIUDIZI[s.giudizio].tono}">${GIUDIZI[s.giudizio].emoji} ${GIUDIZI[s.giudizio].nome}</span>` : "",
+      azione: "modifica", dati: { genere: "soggiorni", id: s.id },
+    }))}</div>`, "posto");
+}
+
+/** Nuova permanenza dallo stesso posto: nome, città e tipo già scritti, arrivo oggi. */
+export function nuovoSoggiorno(chiave) {
+  const p = posti(stato.soggiorni).find((x) => x.chiave === chiave);
+  if (!p) return apri("soggiorni");
+  apri("soggiorni", { preset: { tipo: p.tipo, nome: p.nome, citta: p.citta, dal: stato.oggi } });
+}

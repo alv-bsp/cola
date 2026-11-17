@@ -128,6 +128,47 @@ create table public.cola_diario (
 );
 create index cola_diario_il_idx on public.cola_diario (il);
 
+-- ─── Addestramento: un trick per riga ───────────────────────────────
+-- Tre livelli di affidabilità, ognuno con il giorno in cui è arrivato: in casa, fuori, con distrazioni.
+-- Uguale a supabase/modifiche/2026-11-17-addestramento.sql (permessi e RLS compresi).
+create table public.cola_trick (
+  id              uuid primary key default gen_random_uuid(),
+  nome            text not null check (char_length(btrim(nome)) between 1 and 60),
+  comando         text check (char_length(comando) <= 80),        -- la parola o il gesto
+  stato           text not null default 'da-iniziare' check (stato in ('da-iniziare', 'in-corso', 'imparato')),
+  iniziato_il     date,
+  casa_il         date,
+  fuori_il        date,
+  distrazioni_il  date,
+  imparato_il     date,
+  note            text check (char_length(note) <= 2000),
+  creato_da       uuid default auth.uid() references auth.users (id) on delete set null,
+  creato_il       timestamptz not null default now()
+);
+revoke all on public.cola_trick from anon, authenticated;
+grant select, insert, update, delete on public.cola_trick to authenticated;
+alter table public.cola_trick enable row level security;
+
+-- ─── Dog sitter e pensioni: una permanenza per riga ─────────────────
+-- Lo storico di dove è stata: chi, in che città, quando, e com'è andata. Niente indirizzi.
+-- Uguale a supabase/modifiche/2026-11-17-soggiorni.sql (permessi e RLS compresi).
+create table public.cola_soggiorni (
+  id        uuid primary key default gen_random_uuid(),
+  tipo      text not null default 'dog-sitter' check (tipo in ('dog-sitter', 'pensione')),
+  nome      text not null check (char_length(btrim(nome)) between 1 and 80),
+  citta     text check (char_length(citta) <= 60),
+  dal       date not null,
+  al        date check (al is null or al >= dal),
+  giudizio  text check (giudizio in ('su', 'medio', 'giu')),   -- vuoto = non ancora dato
+  note      text check (char_length(note) <= 1000),
+  creato_da uuid default auth.uid() references auth.users (id) on delete set null,
+  creato_il timestamptz not null default now()
+);
+create index cola_soggiorni_dal_idx on public.cola_soggiorni (dal);
+revoke all on public.cola_soggiorni from anon, authenticated;
+grant select, insert, update, delete on public.cola_soggiorni to authenticated;
+alter table public.cola_soggiorni enable row level security;
+
 -- ─── Data di modifica del profilo ───────────────────────────────────
 create function public.cola_profilo_modificato() returns trigger
 language plpgsql set search_path = '' as $$
@@ -179,6 +220,10 @@ create policy "cola_salute: membri" on public.cola_salute
 create policy "cola_cose: membri" on public.cola_cose
   for all to authenticated using ((select public.cola_membro())) with check ((select public.cola_membro()));
 create policy "cola_diario: membri" on public.cola_diario
+  for all to authenticated using ((select public.cola_membro())) with check ((select public.cola_membro()));
+create policy "cola_trick: membri" on public.cola_trick
+  for all to authenticated using ((select public.cola_membro())) with check ((select public.cola_membro()));
+create policy "cola_soggiorni: membri" on public.cola_soggiorni
   for all to authenticated using ((select public.cola_membro())) with check ((select public.cola_membro()));
 
 -- ─── Foto: bucket privato ───────────────────────────────────────────

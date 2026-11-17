@@ -4,6 +4,7 @@ import { barrePeso, ondaCiclo, scintilla } from "../ui/grafici.js";
 import { urlInCache } from "../foto.js";
 import {
   andamentoPeso, ciclo, scadenzeSalute, coseDivise, inArrivo, cronologia, etaInParole, eta, compleanno, formatoKg,
+  trickDivisi, traguardi, livelliRaggiunti, LIVELLI,
 } from "../regole.js";
 import { data, relativo } from "../tempo.js";
 import { vuoto, nomeCane } from "../stato.js";
@@ -31,6 +32,7 @@ export function render(s, { avviso }) {
       ${comeSta(s, { peso, cl, scadenze, cose })}
       ${cartaCiclo(cl, oggi)}
       ${cartaPeso(peso)}
+      ${cartaAddestramento(s)}
       <section class="carta in-arrivo">
         ${testaCarta("In arrivo", { href: "#/cose", testo: "Da fare" })}
         ${arrivo.length
@@ -190,6 +192,27 @@ function cartaPeso(peso) {
       <div class="carta-testa"><h2>Peso</h2><span class="pillola-chiara">${peso.elenco.length > 7 ? "Ultime 7" : "Tutte"} ${icona("chevron-right", 14)}</span></div>
       ${barrePeso(peso.elenco)}
     </a>`;
+}
+
+// ───────────────────────────────────────── addestramento
+function cartaAddestramento(s) {
+  if (!s.trickOk) return "";
+  const d = trickDivisi(s.trick);
+  const ultimo = traguardi(s.trick)[0];
+  return html`
+    <section class="carta addestramento-carta">
+      ${testaCarta("Addestramento", { href: "#/addestramento", testo: "Trick" })}
+      ${d.inCorso.length ? html`<div class="elenco">${d.inCorso.slice(0, 3).map((t) => html`
+        <a class="trick-mini" href="#/addestramento">
+          <b>${t.nome}</b>
+          <span class="passi" aria-label="${livelliRaggiunti(t)} livelli su ${LIVELLI.length}">
+            ${LIVELLI.map((l) => html`<i class="${t[l.colonna] ? "fatto" : ""}" title="${l.nome}"></i>`)}
+          </span>
+        </a>`)}</div>`
+        : html`<p class="vuoto-testo">${s.trick.length ? "Nessun trick in corso: scegline uno da iniziare." : "Segna i trick che state insegnando e i progressi, in casa, fuori e con le distrazioni."}</p>`}
+      ${ultimo ? html`<p class="traguardo">${icona("award", 16)} <span>${ultimo.titolo}, ${relativo(ultimo.il, s.oggi)}</span></p>` : ""}
+      <p class="conta-trick">${d.imparati.length} ${d.imparati.length === 1 ? "imparato" : "imparati"} · ${d.inCorso.length} in corso · ${d.daIniziare.length} da iniziare</p>
+    </section>`;
 }
 
 // ───────────────────────────────────────── stati vuoti

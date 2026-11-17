@@ -286,13 +286,126 @@ export function coseDivise(cose, oggi) {
   };
 }
 
+// ───────────────────────────────────────── addestramento
+export const STATI_TRICK = { "da-iniziare": "Da iniziare", "in-corso": "In corso", imparato: "Imparato" };
+
+/** I tre livelli di affidabilità, in ordine: colonna con la data e nome. */
+export const LIVELLI = [
+  { chiave: "casa", colonna: "casa_il", nome: "In casa" },
+  { chiave: "fuori", colonna: "fuori_il", nome: "Fuori" },
+  { chiave: "distrazioni", colonna: "distrazioni_il", nome: "Con distrazioni" },
+];
+
+export const livelliRaggiunti = (t) => LIVELLI.filter((l) => t[l.colonna]).length;
+
+/**
+ * Rimette in fila stato e date di un trick: un livello raggiunto vuol dire che è iniziato; tutti e tre vogliono dire
+ * imparato; imparato senza data prende oggi; tornando indietro dallo stato imparato la data si toglie.
+ */
+export function normalizzaTrick(t, oggi) {
+  const r = { ...t };
+  const date = LIVELLI.map((l) => r[l.colonna]).filter(Boolean).sort();
+  if (date.length && r.stato === "da-iniziare") r.stato = "in-corso";
+  if (date.length === LIVELLI.length && r.stato !== "imparato" && !t._statoScelto) {
+    r.stato = "imparato";
+    r.imparato_il = r.imparato_il || date.at(-1);
+  }
+  if (r.stato === "imparato") r.imparato_il = r.imparato_il || oggi;
+  else r.imparato_il = null;
+  if (r.stato !== "da-iniziare") r.iniziato_il = r.iniziato_il || date[0] || oggi;
+  delete r._statoScelto;
+  return r;
+}
+
+/** Il livello segnato come raggiunto oggi, con lo stato che segue. Restituisce solo i campi che cambiano. */
+export function conLivello(t, chiave, oggi) {
+  const l = LIVELLI.find((x) => x.chiave === chiave);
+  const nuovo = normalizzaTrick({ ...t, [l.colonna]: oggi }, oggi);
+  const campi = {};
+  for (const k of ["stato", "iniziato_il", "casa_il", "fuori_il", "distrazioni_il", "imparato_il"]) {
+    if (nuovo[k] !== t[k]) campi[k] = nuovo[k];
+  }
+  return campi;
+}
+
+/** Trick divisi per stato: in corso dal più avanti, da iniziare in ordine di inserimento, imparati dal più recente. */
+export function trickDivisi(trick) {
+  const elenco = trick || [];
+  return {
+    inCorso: elenco.filter((t) => t.stato === "in-corso")
+      .sort((a, b) => livelliRaggiunti(b) - livelliRaggiunti(a) || (a.iniziato_il || "").localeCompare(b.iniziato_il || "")),
+    daIniziare: elenco.filter((t) => t.stato === "da-iniziare")
+      .sort((a, b) => (a.creato_il || "").localeCompare(b.creato_il || "") || a.nome.localeCompare(b.nome, "it")),
+    imparati: elenco.filter((t) => t.stato === "imparato")
+      .sort((a, b) => (b.imparato_il || "").localeCompare(a.imparato_il || "")),
+  };
+}
+
+/** I traguardi di addestramento come voci con data: inizio, livelli, imparato. */
+export function traguardi(trick) {
+  const voci = [];
+  for (const t of trick || []) {
+    if (t.iniziato_il) voci.push({ il: t.iniziato_il, titolo: `${t.nome}: si comincia`, rif: t });
+    for (const l of LIVELLI) if (t[l.colonna]) voci.push({ il: t[l.colonna], titolo: `${t.nome}: ${l.nome.toLowerCase()}`, rif: t });
+    if (t.imparato_il) voci.push({ il: t.imparato_il, titolo: `${t.nome}: imparato`, rif: t, imparato: true });
+  }
+  return voci.sort((a, b) => b.il.localeCompare(a.il));
+}
+
+// ───────────────────────────────────────── dog sitter e pensioni
+export const TIPI_SOGGIORNO = { "dog-sitter": "Dog sitter", pensione: "Pensione" };
+export const GIUDIZI = {
+  su: { emoji: "👍", nome: "Sì", tono: "verde" },
+  medio: { emoji: "😐", nome: "Medio", tono: "giallo" },
+  giu: { emoji: "👎", nome: "No", tono: "rosso" },
+};
+
+/** Notti di una permanenza: senza la fine, o finita lo stesso giorno, è una giornata. */
+export const notti = (s) => (s.al ? Math.max(0, giorniTra(s.dal, s.al)) : 0);
+
+export function durataSoggiorno(s) {
+  const n = notti(s);
+  if (n === 0) return "una giornata";
+  return n === 1 ? "una notte" : `${n} notti`;
+}
+
+const chiavePosto = (s) => s.nome.trim().toLowerCase();
+
+/**
+ * Le permanenze raggruppate per dog sitter o pensione, dal posto usato più di recente. Per ognuno: le permanenze
+ * (dalla più recente), il giudizio dell'ultima che ne ha uno e quanti sì, medio e no.
+ */
+export function posti(soggiorni) {
+  const m = new Map();
+  for (const s of soggiorni || []) {
+    const k = chiavePosto(s);
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(s);
+  }
+  return [...m.entries()].map(([chiave, elenco]) => {
+    elenco.sort((a, b) => b.dal.localeCompare(a.dal) || (b.creato_il || "").localeCompare(a.creato_il || ""));
+    const ultimo = elenco[0];
+    const conteggi = { su: 0, medio: 0, giu: 0 };
+    for (const s of elenco) if (s.giudizio) conteggi[s.giudizio] += 1;
+    return {
+      chiave, nome: ultimo.nome.trim(), citta: elenco.find((s) => s.citta)?.citta || "", tipo: ultimo.tipo,
+      soggiorni: elenco, ultimo, giudizio: elenco.find((s) => s.giudizio)?.giudizio || null, conteggi,
+      notti: elenco.reduce((t, s) => t + notti(s), 0),
+    };
+  }).sort((a, b) => b.ultimo.dal.localeCompare(a.ultimo.dal));
+}
+
 // ───────────────────────────────────────── in arrivo
 /**
  * Quello che arriva, per la pagina Oggi: scadenze di salute, cose da fare con una data, il prossimo calore
  * stimato e i compleanni. Ogni voce: { tipo, titolo, sotto, il, mancano, urgenza, rif }.
  */
-export function inArrivo({ salute, cose, calori, profilo }, oggi, quanti = 6) {
+export function inArrivo({ salute, cose, calori, profilo, soggiorni }, oggi, quanti = 6) {
   const voci = [];
+  for (const s of (soggiorni || []).filter((x) => x.dal > oggi)) {
+    const mancano = giorniTra(oggi, s.dal);
+    voci.push({ genere: "soggiorno", tipo: s.tipo, titolo: `Da ${s.nome}`, sotto: [s.citta, durataSoggiorno(s)].filter(Boolean).join(" · "), il: s.dal, mancano, urgenza: urgenza(mancano, 7), rif: s });
+  }
   for (const s of scadenzeSalute(salute, oggi)) {
     voci.push({ genere: "salute", tipo: s.tipo, titolo: s.nome, sotto: TIPI[s.tipo]?.nome || "", il: s.il, mancano: s.mancano, urgenza: s.urgenza, rif: s });
   }
@@ -316,7 +429,7 @@ export function inArrivo({ salute, cose, calori, profilo }, oggi, quanti = 6) {
 
 // ───────────────────────────────────────── diario
 /** Tutto quello che è successo, dal più recente: pesate, salute, calori, note e cose fatte. */
-export function cronologia({ pesi, salute, calori, diario, cose }) {
+export function cronologia({ pesi, salute, calori, diario, cose, trick, soggiorni }) {
   const voci = [];
   for (const p of pesateInOrdine(pesi)) voci.push({ genere: "peso", il: p.il, titolo: `${formatoKg(p.kg)} kg`, sotto: p.delta == null ? "Prima pesata" : `${p.delta >= 0 ? "+" : "−"}${formatoKg(Math.abs(p.delta))} kg`, rif: p });
   for (const s of salute || []) voci.push({ genere: "salute", tipo: s.tipo, il: s.il, titolo: s.nome, sotto: TIPI[s.tipo]?.nome || "", rif: s });
@@ -326,6 +439,13 @@ export function cronologia({ pesi, salute, calori, diario, cose }) {
   }
   for (const d of (diario || []).filter((x) => x.il)) voci.push({ genere: "nota", il: d.il, titolo: d.titolo, sotto: d.testo || "", rif: d });
   for (const c of (cose || []).filter((x) => x.fatta_il)) voci.push({ genere: "cosa", il: giornoRoma(c.fatta_il), titolo: c.testo, sotto: "Fatto", rif: c });
+  for (const t of traguardi(trick)) voci.push({ genere: "trick", il: t.il, titolo: t.titolo, sotto: "Addestramento", rif: t.rif });
+  for (const s of soggiorni || []) {
+    voci.push({
+      genere: "soggiorno", il: s.dal, titolo: `Da ${s.nome}${s.giudizio ? ` ${GIUDIZI[s.giudizio].emoji}` : ""}`,
+      sotto: [TIPI_SOGGIORNO[s.tipo], s.citta, durataSoggiorno(s)].filter(Boolean).join(" · "), rif: s,
+    });
+  }
   return voci.sort((a, b) => b.il.localeCompare(a.il));
 }
 

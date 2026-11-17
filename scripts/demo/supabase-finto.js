@@ -2,6 +2,7 @@
 // Parte dai dati di partenza veri e aggiunge eventi di salute e contatti INVENTATI, solo per vedere l'app piena.
 // Quello che salvi resta finché non ricarichi la pagina.
 import { PARTENZA } from "/src/partenza.js";
+import { TRICK_BASE } from "/src/trick-base.js";
 
 let n = 0;
 const id = () => `demo-${++n}`;
@@ -24,6 +25,21 @@ const DB = {
   cola_cose: conId(PARTENZA.cose.map((c) => ({ fatta_il: null, ...c }))),
   cola_diario: conId(PARTENZA.diario),
   cola_contatti: conId([...PARTENZA.contatti, { ruolo: "veterinario", nome: "Veterinario di prova", telefono: "+39 000 0000000" }]),
+  // Permanenze inventate
+  cola_soggiorni: conId([
+    { tipo: "dog-sitter", nome: "Dog sitter di prova", citta: "Lecco", dal: "2026-08-08", al: "2026-08-09", giudizio: "su", note: "Esempio: ha un gatto, Cola tranquilla." },
+    { tipo: "dog-sitter", nome: "Dog sitter di prova", citta: "Lecco", dal: "2026-10-03", al: "2026-10-05", giudizio: "su" },
+    { tipo: "pensione", nome: "Pensione di prova", citta: "Bergamo", dal: "2026-09-12", al: "2026-09-19", giudizio: "medio", note: "Esempio: tornata stanca e un po' dimagrita." },
+    { tipo: "dog-sitter", nome: "Dog sitter di prova", citta: "Lecco", dal: "2026-12-20", al: "2026-12-27" },
+  ]),
+  // Progressi inventati, per vedere la scheda piena
+  cola_trick: conId(TRICK_BASE.map((t) => ({ stato: "da-iniziare", ...t }))).map((t, i) => {
+    if (i < 3) return { ...t, stato: "imparato", iniziato_il: "2026-06-10", casa_il: "2026-06-20", fuori_il: "2026-07-15", distrazioni_il: "2026-09-01", imparato_il: "2026-09-01" };
+    if (i === 3) return { ...t, stato: "in-corso", iniziato_il: "2026-08-01", casa_il: "2026-08-20", fuori_il: "2026-11-02" };
+    if (i === 8) return { ...t, stato: "in-corso", iniziato_il: "2026-10-10", casa_il: "2026-11-05" };
+    if (i === 11) return { ...t, stato: "in-corso", iniziato_il: "2026-11-12" };
+    return t;
+  }),
 };
 
 class Query {

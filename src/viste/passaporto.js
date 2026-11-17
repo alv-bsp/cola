@@ -2,7 +2,7 @@ import { html } from "../ui/html.js";
 import { icona } from "../ui/icone.js";
 import { urlInCache } from "../foto.js";
 import { VERSIONE } from "../config.js";
-import { compleanno, etaInParole, formatoNumero } from "../regole.js";
+import { compleanno, etaInParole, formatoNumero, posti, GIUDIZI, TIPI_SOGGIORNO } from "../regole.js";
 import { data, relativo } from "../tempo.js";
 import { nomeCane } from "../stato.js";
 import { pillola, tessera, titoloPagina } from "./comuni.js";
@@ -90,6 +90,8 @@ export function render(s, { avviso }) {
           : html`<p class="vuoto-testo">Veterinario, pet sitter, toelettatura: un tocco per chiamare.</p>`}
       </section>
 
+      ${sezioneSoggiorni(s)}
+
       <section class="carta">
         <div class="carta-testa"><h2>Note</h2>
           <button class="btn-icona" type="button" data-azione="profilo" data-parte="note" aria-label="Modifica le note">${icona("pencil", 18)}</button></div>
@@ -117,6 +119,38 @@ function rigaContatto(c) {
       ${tel ? html`<a class="btn-icona vetro" href="tel:${tel}" aria-label="Chiama ${c.nome}">${icona("phone", 18)}</a>` : ""}
       ${c.email ? html`<a class="btn-icona vetro" href="mailto:${c.email}" aria-label="Scrivi a ${c.nome}">${icona("mail", 18)}</a>` : ""}
     </div>`;
+}
+
+/** Dog sitter e pensioni: un posto per riga, con il giudizio dell'ultima volta e quante volte ci è stata. */
+function sezioneSoggiorni(s) {
+  const nuovo = html`<button class="btn-icona" type="button" data-azione="nuovo" data-genere="soggiorni" aria-label="Nuova permanenza">${icona("plus", 18)}</button>`;
+  if (!s.soggiorniOk) {
+    return html`
+      <section class="carta" id="soggiorni">
+        <div class="carta-testa"><h2>Dog sitter e pensioni</h2></div>
+        <p class="vuoto-testo">Manca la tabella nel database: nel SQL Editor di Supabase esegui
+        <b>supabase/modifiche/2026-11-17-soggiorni.sql</b>.</p>
+      </section>`;
+  }
+  const elenco = posti(s.soggiorni);
+  return html`
+    <section class="carta" id="soggiorni">
+      <div class="carta-testa"><h2>Dog sitter e pensioni</h2>${nuovo}</div>
+      ${elenco.length ? html`<div class="elenco">${elenco.map((p) => rigaPosto(p, s.oggi))}</div>`
+        : html`<p class="vuoto-testo">Ogni volta che sta da qualcuno: chi, in che città, per quanto e com'è andata. Così vi ricordate da chi riportarla.</p>`}
+    </section>`;
+}
+
+function rigaPosto(p, oggi) {
+  const g = p.giudizio ? GIUDIZI[p.giudizio] : null;
+  const volte = p.soggiorni.length === 1 ? "una volta" : `${p.soggiorni.length} volte`;
+  return html`
+    <button class="riga posto" type="button" data-azione="posto" data-chiave="${p.chiave}">
+      <span class="tessera giudizio" data-tono="${p.giudizio || "nessuno"}" aria-label="${g ? g.nome : "Senza giudizio"}">${g ? g.emoji : icona(p.tipo === "pensione" ? "bed" : "house", 20)}</span>
+      <span class="riga-testo"><b>${p.nome}</b><small>${[TIPI_SOGGIORNO[p.tipo], p.citta, volte].filter(Boolean).join(" · ")}</small></span>
+      <span class="riga-fine"><small>${data(p.ultimo.dal, oggi)}</small></span>
+      <span class="riga-chevron">${icona("chevron-right", 18)}</span>
+    </button>`;
 }
 
 /** Le due righe "a lettura ottica" in fondo al documento: solo decorazione, costruite dai dati veri. */

@@ -16,6 +16,10 @@ const VUOTO = () => ({
   cose: [],
   diario: [],
   contatti: [],
+  trick: [],
+  trickOk: true,          // false se la tabella cola_trick non c'è ancora (modifica del 17/11 da eseguire)
+  soggiorni: [],
+  soggiorniOk: true,      // false se la tabella cola_soggiorni non c'è ancora (modifica del 17/11 da eseguire)
 });
 
 export const stato = {
